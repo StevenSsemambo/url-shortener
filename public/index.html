@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener</title>
+  <style>
+    :root { --bg:#f3f4f8; --card:#fff; --text:#1f2430; --muted:#6b7280; --primary:#4f46e5; --border:#d1d5db; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#0f1117; --card:#181b24; --text:#e8eaf0; --muted:#98a0b3; --border:#343a4b; } }
+    * { box-sizing:border-box } body { margin:0; min-height:100vh; display:grid; place-items:center; padding:16px; background:var(--bg); color:var(--text); font-family:system-ui,sans-serif }
+    main { width:min(520px,100%); background:var(--card); padding:26px; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.08) }
+    h1 { margin:0 0 16px } input,button { font:inherit; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); background:transparent; color:var(--text) }
+    form { display:grid; gap:10px } button { background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600; cursor:pointer }
+    .result { margin-top:16px; padding:12px; border-radius:8px; background:rgba(79,70,229,.1); word-break:break-all } .error { color:#dc2626 } .muted { color:var(--muted); font-size:.85rem }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🔗 URL Shortener</h1>
+    <form id="form">
+      <input id="url" type="url" placeholder="https://example.com/very/long/link" required />
+      <input id="custom" type="text" placeholder="Custom code (optional)" pattern="[A-Za-z0-9_-]{3,32}" />
+      <button>Shorten</button>
+    </form>
+    <div id="out"></div>
+    <script>
+      const out = document.getElementById("out");
+      document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = { url: url.value };
+        if (custom.value) body.customCode = custom.value;
+        const res = await fetch("/api/shorten", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const data = await res.json();
+        out.className = "result";
+        out.replaceChildren();
+        if (!res.ok) { out.className = "result error"; out.textContent = data.error; return; }
+        const a = document.createElement("a"); a.href = data.shortUrl; a.textContent = data.shortUrl; a.target = "_blank";
+        const note = document.createElement("div"); note.className = "muted"; note.textContent = `Visits so far: ${data.visits}`;
+        out.append(a, note);
+      });
+    </script>
+  </main>
+</body>
+</html>
